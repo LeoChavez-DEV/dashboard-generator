@@ -1,0 +1,15 @@
+# Python y Django
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.env
+
+# Node.js y React
+node_modules/
+build/
+dist/
+
+# Docker
+*.log
+docker-compose.override.yml
