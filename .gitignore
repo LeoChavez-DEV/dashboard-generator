@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.db
 .env
+venv/
 
 # Node.js y React
 node_modules/

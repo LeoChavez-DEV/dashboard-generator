@@ -1,0 +1,117 @@
+BASE:
+Python (la versión más reciente de Python 3)
+Docker (para crear contenedores)
+Docker Compose (para administrar los contenedores y servicios de Docker)
+
+------------------------------------------------------------------------------
+
+1 → Crear una carpeta para el proyecto 
+
+------------------------------------------------------------------------------
+
+2 → Crear el entorno virtual y activarlo
+
+python -m venv venv (Creara la carpeta vnev que sera el entorno)
+venv\Scripts\activate (Comando para activar el entorno)
+
+------------------------------------------------------------------------------
+
+3 → Instalar las dependencias de django
+
+Instalaremos django en el entorno virtual → pip install django
+Verificamos con → django-admin --version
+
+------------------------------------------------------------------------------
+
+4 → Crear el proyecto Django
+
+Comando para crearlo → django-admin startproject generador_dashboard .
+Comando para salir del (venv) cuando hayamos instalado el proyecto django → deactivate
+
+------------------------------------------------------------------------------
+
+5 → Crear los archivos de configuración para Docker
+
+Se crearan 2 archivos, uno llamado Dockerfile y el otro docker-compose.yml
+
+↓↓↓↓↓↓↓↓↓↓ Dockerfile ↓↓↓↓↓↓↓↓↓↓
+
+# Usamos la imagen base de Python
+FROM python:3.10-slim
+
+# Instalamos las dependencias del sistema necesarias para mysqlclient
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libmariadb-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establecemos el directorio de trabajo
+WORKDIR /app
+
+# Copiamos el archivo de requerimientos
+COPY requirements.txt .
+
+# Instalamos las dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiamos el código fuente
+COPY . .
+
+# Exponemos el puerto en el que corre la aplicación
+EXPOSE 8000
+
+# Comando por defecto para correr la aplicación
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+↓↓↓↓↓↓↓↓↓↓ docker-compose.yml ↓↓↓↓↓↓↓↓↓↓
+
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: generador_dashboard
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+
+volumes:
+  mysql_data:
+
+------------------------------------------------------------------------------
+
+6 → Dependencias del contenedor Docker
+
+↓↓↓↓↓↓↓↓↓↓ Por default ↓↓↓↓↓↓↓↓↓↓
+
+django
+mysqlclient
+
+↓↓↓↓↓↓↓↓↓↓ En este proyecto ↓↓↓↓↓↓↓↓↓↓
+
+Django>=4.2,<5
+djangorestframework
+mysqlclient
+gunicorn
+
+------------------------------------------------------------------------------
+
+7 → Construir y levantar los contenedores de Docker
+
+Primero vamos a construir → docker-compose build
+
+
